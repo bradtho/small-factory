@@ -85,6 +85,11 @@ jobs:
           git config user.email "factory-bot@users.noreply.github.com"
           git checkout -b "factory/issue-$N"
           git add -- . ':!prompt.txt' ':!plan.md' ':!execution-log.md'
+          if git diff --cached --quiet; then
+            echo "::notice::Execution station produced no changes; nothing to open a PR for."
+            gh issue comment "$N" --body "The execution station made no changes. The approved plan reported that this work was already implemented; the agent verified and edited nothing. The full transcript is attached to the workflow run as an artifact."
+            exit 0
+          fi
           git commit -m "Factory: $ISSUE_TITLE (#$N)"
           git push origin "factory/issue-$N"
           gh pr create \
