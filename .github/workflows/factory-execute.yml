@@ -78,6 +78,7 @@ jobs:
       - name: Open a pull request
         env:
           GH_TOKEN: ${{ secrets.FACTORY_GITHUB_TOKEN }}
+          DEFAULT_TOKEN: ${{ github.token }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           N="${{ github.event.issue.number }}"
@@ -87,7 +88,8 @@ jobs:
           git add -- . ':!prompt.txt' ':!plan.md' ':!execution-log.md'
           if git diff --cached --quiet; then
             echo "::notice::Execution station produced no changes; nothing to open a PR for."
-            gh issue comment "$N" --body "The execution station made no changes. The approved plan reported that this work was already implemented; the agent verified and edited nothing. The full transcript is attached to the workflow run as an artifact."
+            GH_TOKEN="$DEFAULT_TOKEN" gh issue comment "$N" --body "The execution station made no changes. The approved plan reported that this work was already implemented; the agent verified and edited nothing. The full transcript is attached to the workflow run as an artifact." \
+              || echo "::warning::Could not post the no-op finding to issue #$N; see the run artifact."
             exit 0
           fi
           git commit -m "Factory: $ISSUE_TITLE (#$N)"
